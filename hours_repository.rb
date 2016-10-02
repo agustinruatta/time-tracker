@@ -1,5 +1,4 @@
 require 'csv'
-require 'time'
 require_relative 'labor'
 
 class HoursRepository
@@ -29,7 +28,7 @@ class HoursRepository
     times = []
     
     CSV.foreach(CSV_FILE, headers: true) do |row|
-      times  << Labor.new(Time.parse(row[DATETIME_COLUMN]), row[ACTION_COLUMN])
+      times  << Labor.new(DateTime.parse(row[DATETIME_COLUMN]), row[ACTION_COLUMN])
     end
     
     return times

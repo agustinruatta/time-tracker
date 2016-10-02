@@ -7,28 +7,31 @@ class HoursService
   end
   
   def start
-    @hours_repository.save_start Time.now
+    @hours_repository.save_start DateTime.now
   end
   
   def stop
-    @hours_repository.save_stop Time.now
+    @hours_repository.save_stop DateTime.now
   end
   
-  def seconds_worked_in_day(date)
+  def seconds_worked_in_day(from, to)
     labors = []
     
     @hours_repository.get_all.each do |labor|
-      labors << labor if are_in_the_same_day labor.time, date
+      labors << labor if labor.date_time >= from && labor.date_time <= to
     end
     
-    raise Exception.new('Invalid file. There are not an even quantity of times.') if labors.length.odd?
+    return 0 unless labors.any?
+
+    raise Exception.new('The first action between "from" and "to" is not "start"') if labors.first.action != Labor::START_ACTION
+    raise Exception.new('The last action between "from" and "to" is not "stop"') if labors.last.action != Labor::STOP_ACTION
     
     total_seconds = 0
 
     labors.each_slice(2) do |start, stop|
-      raise Exception.new('Invalid file. See the "start" and "stop" actions') if start.action != Labor::START_ACTION || stop.action != Labor::STOP_ACTION
+      raise Exception.new('Invalid file. There must not be two contiguous "start" or "stop" actions.') if start.action != Labor::START_ACTION || stop.action != Labor::STOP_ACTION
       
-      total_seconds += (stop.time - start.time)
+      total_seconds += ((stop.date_time - start.date_time) * 24 * 60 * 60).to_i
     end
     
     return total_seconds.to_i
@@ -43,18 +46,14 @@ class HoursService
   end
 
   def can_get_worked_hours?
+    all = @hours_repository.get_all
+    
+    return false unless all.any?
+    
     return @hours_repository.get_all.last.action != Labor::START_ACTION
   end
   
   private
-  
-  def are_in_the_same_day(time, date)
-    return (
-      time.year == date.year &&
-      time.month == date.month &&
-      time.day == date.day
-    )
-  end
   
   def last_action_is_different(action)
     all = @hours_repository.get_all
@@ -67,4 +66,6 @@ class HoursService
     end
     
   end
+  
+  
 end
