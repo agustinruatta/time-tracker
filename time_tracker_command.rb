@@ -221,6 +221,8 @@ between 2016-10-02 01:02:03 and 2016-10-03 23:59:59.
   Take care that you MUST NOT set an 'stop' action if you
   want to use 'now' option.
 
+`$ ruby time_tracker.rb clear`: clear all saved hours from current project.
+
 More info: https://github.com/agustinruatta/time-tracker
 msg
     

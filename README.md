@@ -53,6 +53,8 @@ get worked hours between **2016-10-02 01:02:03** and **now**. Take care
 that you **must not** set an *stop* action if you want to use *now*
 option.
 
+`$ ruby time_tracker.rb clear`: clear all saved hours from current project.
+
 # Disclaimers
 
 TimeTracker is just a draft project. Do not aim to find a Project
