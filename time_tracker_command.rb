@@ -1,4 +1,5 @@
 require 'json'
+require 'date'
 
 require_relative 'services/hours_service'
 require_relative 'services/config_service'
@@ -10,6 +11,9 @@ class TimeTrackerCommand
   HELP_COMMAND = 'help'
   SET_PROJECT_COMMAND = 'set-project'
   CURRENT_PROJECT_COMMAND = 'current-project'
+  
+  NOW_OPTION = 'now'
+  TODAY_OPTION = 'today'
   
   def initialize
     @hours_service = HoursService.new
@@ -46,20 +50,25 @@ class TimeTrackerCommand
         end
         
       when WORKED_COMMAND
-        unless @hours_service.can_get_worked_hours?
-          puts 'Please, set the "stop"'
-          
-          return
-        end
+        (puts 'No hours saved to calculate'; return) unless @hours_service.has_data?
         
-        begin
+        #begin
           from = from args
-          to = to args
-  
-          raise Exception.new("'To' is not newer than 'from'\n\tFrom: #{from}\n\tTo: #{to}") if from > to
-  
-          total_seconds = @hours_service.seconds_worked_in_day(from(args), to(args))
+          
+          unless has_used_now_option? args
+            (puts 'Please, set the "stop"'; return) unless @hours_service.last_action_is_stop?
+            
+            to = to args
+            
+            raise Exception.new("'To' is not newer than 'from'\n\tFrom: #{from}\n\tTo: #{to}") if from > to
 
+            total_seconds = @hours_service.seconds_worked(from, to)
+          else
+            to = DateTime.now
+            
+            total_seconds = @hours_service.seconds_worked_to_now(from)
+          end
+          
           seconds = total_seconds % 60
           minutes = (total_seconds / 60) % 60
           hours = total_seconds / (60 * 60)
@@ -70,9 +79,9 @@ class TimeTrackerCommand
           
           puts "#{from_text}\n#{to_text}\n\n#{hours_worked_text}"
 
-        rescue Exception => e
-          puts "Error: #{e.message}"
-        end
+        #rescue Exception => e
+        #  puts "Error: #{e.message}"
+        #end
         
       when SET_PROJECT_COMMAND
         project_name = args[1]
@@ -125,31 +134,43 @@ class TimeTrackerCommand
     end
   end
   
+  def has_used_now_option?(args)
+    return args[2] == 'now'
+  end
+  
   def get_date_time(string, set_time_at_end_of_day)
     split = string.split('*')
     
     date = split[0]
+    time = split[1]
     
-    if split[1].nil?
-      time = set_time_at_end_of_day ? '23:59:59' : '00:00:00'
-    else
-      time = split[1]
+    if date == TODAY_OPTION
+      date = Date.today.strftime('%Y-%m-%d')
     end
     
+    if time.nil?
+      time = set_time_at_end_of_day ? '23:59:59' : '00:00:00'
+    end
+    
+    return parse_date_time date, time
+    
+  end
+  
+  def parse_date_time(date, time)
     date_split = date.split('-')
     time_split = time.split(':')
-    
+  
     # There must be a year, month and day
-    raise Exception.new("Incorrect date: #{date}") if date_split.length != 3
-    
+    raise Exception.new("Incorrect date: #{date}. There must be a year, month and day") if date_split.length != 3
+  
     year = date_split[0].to_i
     month = date_split[1].to_i
     day = date_split[2].to_i
-    
-    hours = time_split[0].nil? ? 0: time_split[0].to_i
-    minutes = time_split[1].nil? ? 0: time_split[1].to_i
-    seconds = time_split[2].nil? ? 0: time_split[2].to_i
-    
+  
+    hours = time_split[0].nil? ? 0 : time_split[0].to_i
+    minutes = time_split[1].nil? ? 0 : time_split[1].to_i
+    seconds = time_split[2].nil? ? 0 : time_split[2].to_i
+  
     return DateTime.new(year, month, day, hours, minutes, seconds, DateTime.now.zone)
   end
     
