@@ -11,6 +11,7 @@ class TimeTrackerCommand
   HELP_COMMAND = 'help'
   SET_PROJECT_COMMAND = 'set-project'
   CURRENT_PROJECT_COMMAND = 'current-project'
+  CLEAR_COMMAND = 'clear'
   
   NOW_OPTION = 'now'
   TODAY_OPTION = 'today'
@@ -101,6 +102,17 @@ class TimeTrackerCommand
           puts "Current project: #{current_project}"
         else
           puts 'There is not a current project set'
+        end
+        
+      when CLEAR_COMMAND
+        print 'Are you sure to clear the data (y/N): '
+        
+        user_input = STDIN.gets()
+        
+        if user_input == "y\n"
+          @hours_service.clear
+          
+          puts "Data from '#{@config_service.current_project}' project has been deleted"
         end
         
       when HELP_COMMAND

@@ -16,6 +16,10 @@ class HoursService
     @hours_repository.save_stop @config_service.current_project, DateTime.now
   end
   
+  def clear
+    @hours_repository.clear_data @config_service.current_project
+  end
+  
   def seconds_worked(from, to)
     labors = get_all_labors_between from, to
     

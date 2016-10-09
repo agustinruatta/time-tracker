@@ -34,6 +34,9 @@ class HoursRepository
     return times
   end
 
+  def clear_data(project_name)
+    File.delete get_data_file_path project_name
+  end
   
   
   private
