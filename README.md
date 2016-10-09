@@ -42,6 +42,17 @@ get worked hours between **2016-10-02 00:00:00** and **2016-10-03 12:25:23**.
 `$ ruby time_tracker.rb worked 2016-10-02*01:02:03 2016-10-03*12:25:23`:
 get worked hours between **2016-10-02 01:02:03** and **2016-10-03 12:25:23**.
 
+`$ ruby time_tracker.rb worked today 2016-10-03*12:25:23`:
+get worked hours between **today at 00:00:00** and **2016-10-03 12:25:23**.
+
+`$ ruby time_tracker.rb worked today*01:02:03 2016-10-03*12:25:23`:
+get worked hours between **today at 01:02:03** and **2016-10-03 12:25:23**.
+
+`$ ruby time_tracker.rb worked 2016-10-02*01:02:03 now`:
+get worked hours between **2016-10-02 01:02:03** and **now**. Take care
+that you **must not** set an *stop* action if you want to use *now*
+option.
+
 # Disclaimers
 
 TimeTracker is just a draft project. Do not aim to find a Project

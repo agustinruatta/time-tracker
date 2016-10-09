@@ -107,7 +107,7 @@ class TimeTrackerCommand
         show_help
         
       else
-        puts "Unknown command: #{command}"
+        puts "Unknown command: #{command}.\nWrite '#{HELP_COMMAND}' for help\n\n"
     end
     
   end
@@ -193,10 +193,21 @@ Examples:
 between 2016-10-02 01:02:03 and 2016-10-03 23:59:59.
 
 `$ ruby time_tracker.rb worked 2016-10-02 2016-10-03*12:25:23`:
-get worked hours between 2016-10-02 00:00:00 and 2016-10-03 12:25:23.
+  Get worked hours between 2016-10-02 00:00:00 and 2016-10-03 12:25:23.
  
 `$ ruby time_tracker.rb worked 2016-10-02*01:02:03 2016-10-03*12:25:23`:
-get worked hours between 2016-10-02 01:02:03 and 2016-10-03 12:25:23.
+  Get worked hours between 2016-10-02 01:02:03 and 2016-10-03 12:25:23.
+
+`$ ruby time_tracker.rb worked today 2016-10-03*12:25:23`:
+  Get worked hours between today at 00:00:00 and 2016-10-03 12:25:23.
+
+`$ ruby time_tracker.rb worked today*01:02:03 2016-10-03*12:25:23`:
+  Get worked hours between today at 01:02:03 and 2016-10-03 12:25:23.
+
+`$ ruby time_tracker.rb worked 2016-10-02*01:02:03 now`:
+  Get worked hours between 2016-10-02 01:02:03 and now.
+  Take care that you MUST NOT set an 'stop' action if you
+  want to use 'now' option.
 
 More info: https://github.com/agustinruatta/time-tracker
 msg
