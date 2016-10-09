@@ -4,6 +4,12 @@ A command line time tracker, to save and track the hours worked.
 
 # Requeriments
 - Ruby > 1.9.2
+- 'json' gem. To check if you have it:
+
+```irb
+require 'json'
+ => true
+```
 
 # Commands
 There are three commands

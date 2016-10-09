@@ -1,17 +1,32 @@
-require_relative 'hours_service'
+require 'json'
+
+require_relative 'services/hours_service'
+require_relative 'services/config_service'
 
 class TimeTrackerCommand
   START_COMMAND = 'start'
   STOP_COMMAND = 'stop'
   WORKED_COMMAND = 'worked'
   HELP_COMMAND = 'help'
+  SET_PROJECT_COMMAND = 'set-project'
+  CURRENT_PROJECT_COMMAND = 'current-project'
   
   def initialize
     @hours_service = HoursService.new
+    @config_service = ConfigService.new
   end
   
   def execute(args)
     command = args[0]
+    
+    if(
+      (@config_service.current_project.nil? || @config_service.current_project.strip.empty?) &&
+      command != SET_PROJECT_COMMAND
+    )
+      puts 'No current project set. Please, set one.'
+      
+      return
+    end
 
     case command
       when START_COMMAND
@@ -19,7 +34,7 @@ class TimeTrackerCommand
           @hours_service.start
           puts 'Correct start'
         else
-          puts "You can't start"
+          puts "You can't start again!"
         end
     
       when STOP_COMMAND
@@ -27,7 +42,7 @@ class TimeTrackerCommand
           @hours_service.stop
           puts 'Correct stop'
         else
-          puts "You can't stop"
+          puts "You can't stop again!"
         end
         
       when WORKED_COMMAND
@@ -57,6 +72,26 @@ class TimeTrackerCommand
 
         rescue Exception => e
           puts "Error: #{e.message}"
+        end
+        
+      when SET_PROJECT_COMMAND
+        project_name = args[1]
+        
+        unless project_name.nil?
+          @config_service.set_project project_name
+          
+          puts "Project '#{project_name}' set!"
+        else
+          puts 'Project name was not sent'
+        end
+        
+      when CURRENT_PROJECT_COMMAND
+        current_project = @config_service.current_project
+        
+        unless current_project.nil?
+          puts "Current project: #{current_project}"
+        else
+          puts 'There is not a current project set'
         end
         
       when HELP_COMMAND

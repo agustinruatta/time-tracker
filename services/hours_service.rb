@@ -1,23 +1,25 @@
-require_relative 'hours_repository'
+require_relative '../repositories/hours_repository'
+require_relative '../services/config_service'
 
 class HoursService
   
   def initialize
     @hours_repository = HoursRepository.new
+    @config_service = ConfigService.new
   end
   
   def start
-    @hours_repository.save_start DateTime.now
+    @hours_repository.save_start @config_service.current_project, DateTime.now
   end
   
   def stop
-    @hours_repository.save_stop DateTime.now
+    @hours_repository.save_stop @config_service.current_project, DateTime.now
   end
   
   def seconds_worked_in_day(from, to)
     labors = []
     
-    @hours_repository.get_all.each do |labor|
+    @hours_repository.get_all(@config_service.current_project).each do |labor|
       labors << labor if labor.date_time >= from && labor.date_time <= to
     end
     
@@ -46,17 +48,18 @@ class HoursService
   end
 
   def can_get_worked_hours?
-    all = @hours_repository.get_all
+    all = @hours_repository.get_all(@config_service.current_project)
     
     return false unless all.any?
     
-    return @hours_repository.get_all.last.action != Labor::START_ACTION
+    return @hours_repository.get_all(@config_service.current_project).last.action !=
+      Labor::START_ACTION
   end
   
   private
   
   def last_action_is_different(action)
-    all = @hours_repository.get_all
+    all = @hours_repository.get_all(@config_service.current_project)
     
     if all.any?
       return all.last.action != action
