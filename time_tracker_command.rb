@@ -37,7 +37,7 @@ class TimeTrackerCommand
       when START_COMMAND
         if @hours_service.can_start?
           @hours_service.start
-          puts 'Correct start'
+          puts "Correct start on '#{@config_service.current_project}' project"
         else
           puts "You can't start again!"
         end
@@ -45,7 +45,7 @@ class TimeTrackerCommand
       when STOP_COMMAND
         if @hours_service.can_stop?
           @hours_service.stop
-          puts 'Correct stop'
+          puts "Correct stop on '#{@config_service.current_project}' project"
         else
           puts "You can't stop again!"
         end
@@ -53,7 +53,7 @@ class TimeTrackerCommand
       when WORKED_COMMAND
         (puts 'No hours saved to calculate'; return) unless @hours_service.has_data?
         
-        #begin
+        begin
           from = from args
           
           unless has_used_now_option? args
@@ -80,9 +80,9 @@ class TimeTrackerCommand
           
           puts "#{from_text}\n#{to_text}\n\n#{hours_worked_text}"
 
-        #rescue Exception => e
-        #  puts "Error: #{e.message}"
-        #end
+        rescue Exception => e
+          puts "Error: #{e.message}"
+        end
         
       when SET_PROJECT_COMMAND
         project_name = args[1]
