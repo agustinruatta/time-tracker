@@ -64,11 +64,7 @@ class TimeTrackerCommand
           from = from args
           
           unless has_used_now_option? args
-            (puts 'Please, set the "stop"'; return) unless @hours_service.last_action_is_stop?
-            
             to = to args
-            
-            raise Exception.new("'To' is not newer than 'from'\n\tFrom: #{from}\n\tTo: #{to}") if from > to
   
             total_seconds = @hours_service.seconds_worked(from, to)
           else
@@ -77,15 +73,24 @@ class TimeTrackerCommand
             total_seconds = @hours_service.seconds_worked_to_now(from)
           end
           
-          seconds = total_seconds % 60
-          minutes = (total_seconds / 60) % 60
-          hours = total_seconds / (60 * 60)
-          
           from_text = "From\t-> #{from.strftime('%m/%d/%Y %H:%M:%S')}"
           to_text = "To\t-> #{to.strftime('%m/%d/%Y %H:%M:%S')}"
-          hours_worked_text = "Hours worked: #{format('%02d:%02d:%02d', hours, minutes, seconds)}"
+          hours_worked_text = "Hours worked: #{hour_format(total_seconds)}"
           
           puts "#{from_text}\n#{to_text}\n\n#{hours_worked_text}"
+          
+          unless has_used_now_option? args
+            seconds_worked_in_each_task = @hours_service.seconds_worked_in_each_task from, to
+
+            unless seconds_worked_in_each_task.empty?
+              puts "\n\nSeconds worked in each task:\n"
+              
+              seconds_worked_in_each_task.each do |task_name, task_duration|
+                puts "\tTask '#{task_name}': #{hour_format(task_duration)}"
+              end
+            end
+            
+          end
           
         when SET_PROJECT_COMMAND
           project_name = args[1]
@@ -126,6 +131,15 @@ class TimeTrackerCommand
   end
   
   private
+  
+  
+  def hour_format(total_seconds)
+    seconds = total_seconds % 60
+    minutes = (total_seconds / 60) % 60
+    hours = total_seconds / (60 * 60)
+
+    return format('%02d:%02d:%02d', hours, minutes, seconds)
+  end
   
   def from(args)
     if args.length >= 2

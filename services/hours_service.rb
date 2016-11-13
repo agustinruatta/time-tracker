@@ -50,6 +50,12 @@ class HoursService
   end
   
   def seconds_worked(from, to)
+    unless last_action_is_equal? Labor::STOP_ACTION
+      raise TimeTrackerException.new 'Please, set the "stop"'
+    end
+
+    raise TimeTrackerException.new("'To' is not newer than 'from'\n\tFrom: #{from}\n\tTo: #{to}") if from > to
+    
     labors = get_all_labors_between from, to
     labors = filter_task_actions labors
     
@@ -97,31 +103,48 @@ class HoursService
     return total_seconds.to_i
   end
   
+  # @param [DateTime] from
+  # @param [DateTime] to
+  # @return Hash
+  def seconds_worked_in_each_task(from, to)
+    labors = get_all_labors_between from, to
+    labors = filter_project_actions labors
+  
+    tasks_duration_seconds = Hash.new(0)
+    
+    labors.each_slice(2) do |start_action, stop_action|
+      raise TimeTrackerException.new('Invalid file. There must not be two contiguous "start-task" or "stop-task" actions.') if start_action.action != Labor::START_TASK_ACTION || stop_action.action != Labor::STOP_TASK_ACTION
+  
+      task = start_action.task
+      
+      previous_seconds = tasks_duration_seconds[task]
+      
+      tasks_duration_seconds[task] = previous_seconds + ((stop_action.date_time - start_action.date_time) * 24 * 60 * 60).to_i
+    end
+
+    return tasks_duration_seconds
+  end
+  
   def has_data?
     @hours_repository.get_all(@config_service.current_project).any?
   end
-  
+
   private
 
   def can_start?
-    return last_action_is_equal Labor::STOP_ACTION
+    return last_action_is_equal? Labor::STOP_ACTION
   end
 
   def can_stop?
-    return (last_action_is_equal(Labor::START_ACTION) || last_action_is_equal(Labor::STOP_TASK_ACTION))
-  end
-  
-  def can_start_action?
-    return (last_action_is_equal(Labor::START_ACTION) || last_action_is_equal(Labor::STOP_TASK_ACTION))
-  end
-  
-  def can_stop_action?
-    return last_action_is_equal Labor::START_TASK_ACTION
+    return (last_action_is_equal?(Labor::START_ACTION) || last_action_is_equal?(Labor::STOP_TASK_ACTION))
   end
 
-  def last_action_is_stop?
-    return @hours_repository.get_all(@config_service.current_project).last.action ==
-      Labor::STOP_ACTION
+  def can_start_action?
+    return (last_action_is_equal?(Labor::START_ACTION) || last_action_is_equal?(Labor::STOP_TASK_ACTION))
+  end
+
+  def can_stop_action?
+    return last_action_is_equal? Labor::START_TASK_ACTION
   end
   
   # Filter all labors related to task
@@ -131,6 +154,14 @@ class HoursService
     end
     
     return labors_without_tasks
+  end
+  
+  def filter_project_actions(labors)
+    labors_without_project_actions = labors.select do |labor|
+      labor.is_a_project_action?
+    end
+  
+    return labors_without_project_actions
   end
   
   def get_all_labors_between(from, to)
@@ -143,7 +174,7 @@ class HoursService
     return labors
   end
   
-  def last_action_is_equal(action)
+  def last_action_is_equal?(action)
     all = @hours_repository.get_all(@config_service.current_project)
   
     if all.any?

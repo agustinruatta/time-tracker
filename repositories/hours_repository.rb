@@ -70,7 +70,7 @@ class HoursRepository
     data_file = File.new(data_file_path(project_name), 'w')
   
     # Write headers
-    data_file.puts('"datetime","action"')
+    data_file.puts("\"#{DATETIME_COLUMN}\",\"#{ACTION_COLUMN}\",\"#{TASK_NAME_COLUMN}\"")
   
     data_file.close
   end
