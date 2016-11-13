@@ -6,29 +6,41 @@ class HoursRepository
   
   DATETIME_COLUMN = 'datetime'
   ACTION_COLUMN = 'action'
+  TASK_NAME_COLUMN = 'task-name'
   
   def save_start(project_name, time = Time.now)
-    
     CSV.open(get_data_file_path(project_name), 'a') do |csv|
-      csv << [time, Labor::START_ACTION]
+      csv << [time, Labor::START_ACTION, '']
     end
-    
   end
-  
+
   def save_stop(project_name, time = Time.now)
-    
     CSV.open(get_data_file_path(project_name), 'a') do |csv|
-      csv << [time, Labor::STOP_ACTION]
+      csv << [time, Labor::STOP_ACTION, '']
     end
-    
   end
   
+  # Save the start of the task
+  def save_start_task(project_name, task, time = Time.now)
+    CSV.open(get_data_file_path(project_name), 'a') do |csv|
+      csv << [time, Labor::START_TASK_ACTION, task]
+    end
+  end
+
+  # Stop the last task
+  def save_stop_task(project_name, time = Time.now)
+    CSV.open(get_data_file_path(project_name), 'a') do |csv|
+      csv << [time, Labor::STOP_TASK_ACTION, '']
+    end
+  end
   
+  # Return all the labors
+  # @return Labors[]
   def get_all(project_name)
     times = []
     
     CSV.foreach(get_data_file_path(project_name), headers: true) do |row|
-      times  << Labor.new(DateTime.parse(row[DATETIME_COLUMN]), row[ACTION_COLUMN])
+      times  << Labor.new(DateTime.parse(row[DATETIME_COLUMN]), row[ACTION_COLUMN], row[TASK_NAME_COLUMN])
     end
     
     return times

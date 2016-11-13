@@ -1,0 +1,2 @@
+class TimeTrackerException < Exception
+end

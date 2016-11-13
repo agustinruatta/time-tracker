@@ -3,6 +3,7 @@ require 'date'
 
 require_relative 'services/hours_service'
 require_relative 'services/config_service'
+require_relative 'time_tracker_exception'
 
 class TimeTrackerCommand
   START_COMMAND = 'start'
@@ -12,6 +13,8 @@ class TimeTrackerCommand
   SET_PROJECT_COMMAND = 'set-project'
   CURRENT_PROJECT_COMMAND = 'current-project'
   CLEAR_COMMAND = 'clear'
+  START_TASK = 'start-task'
+  STOP_TASK = 'stop-task'
   
   NOW_OPTION = 'now'
   TODAY_OPTION = 'today'
@@ -33,27 +36,31 @@ class TimeTrackerCommand
       return
     end
 
-    case command
-      when START_COMMAND
-        if @hours_service.can_start?
+    begin
+      
+      case command
+        when START_COMMAND
           @hours_service.start
           puts "Correct start on '#{@config_service.current_project}' project"
-        else
-          puts "You can't start again!"
-        end
-    
-      when STOP_COMMAND
-        if @hours_service.can_stop?
+      
+        when STOP_COMMAND
           @hours_service.stop
           puts "Correct stop on '#{@config_service.current_project}' project"
-        else
-          puts "You can't stop again!"
-        end
-        
-      when WORKED_COMMAND
-        (puts 'No hours saved to calculate'; return) unless @hours_service.has_data?
-        
-        begin
+  
+        when START_TASK
+          task = args[1]
+          
+          @hours_service.start_task task
+          
+          puts "Correct '#{task}' task start on '#{@config_service.current_project}' project"
+  
+        when STOP_TASK
+          @hours_service.stop_task
+          puts "Correct task stop on '#{@config_service.current_project}' project"
+          
+        when WORKED_COMMAND
+          (puts 'No hours saved to calculate'; return) unless @hours_service.has_data?
+          
           from = from args
           
           unless has_used_now_option? args
@@ -62,7 +69,7 @@ class TimeTrackerCommand
             to = to args
             
             raise Exception.new("'To' is not newer than 'from'\n\tFrom: #{from}\n\tTo: #{to}") if from > to
-
+  
             total_seconds = @hours_service.seconds_worked(from, to)
           else
             to = DateTime.now
@@ -79,47 +86,41 @@ class TimeTrackerCommand
           hours_worked_text = "Hours worked: #{format('%02d:%02d:%02d', hours, minutes, seconds)}"
           
           puts "#{from_text}\n#{to_text}\n\n#{hours_worked_text}"
-
-        rescue Exception => e
-          puts "Error: #{e.message}"
-        end
-        
-      when SET_PROJECT_COMMAND
-        project_name = args[1]
-        
-        unless project_name.nil?
+          
+        when SET_PROJECT_COMMAND
+          project_name = args[1]
+          
           @config_service.set_project project_name
-          
           puts "Project '#{project_name}' set!"
-        else
-          puts 'Project name was not sent'
-        end
-        
-      when CURRENT_PROJECT_COMMAND
-        current_project = @config_service.current_project
-        
-        unless current_project.nil?
-          puts "Current project: #{current_project}"
-        else
-          puts 'There is not a current project set'
-        end
-        
-      when CLEAR_COMMAND
-        print 'Are you sure to clear the data (y/N): '
-        
-        user_input = STDIN.gets()
-        
-        if user_input == "y\n"
-          @hours_service.clear
           
-          puts "Data from '#{@config_service.current_project}' project has been deleted"
-        end
-        
-      when HELP_COMMAND
-        show_help
-        
-      else
-        puts "Unknown command: #{command}.\nWrite '#{HELP_COMMAND}' for help\n\n"
+        when CURRENT_PROJECT_COMMAND
+          current_project = @config_service.current_project
+          
+          unless current_project.nil?
+            puts "Current project: #{current_project}"
+          else
+            puts 'There is not a current project set'
+          end
+          
+        when CLEAR_COMMAND
+          print 'Are you sure to clear the data (y/N): '
+          
+          user_input = STDIN.gets()
+          
+          if user_input == "y\n"
+            @hours_service.clear
+            
+            puts "Data from '#{@config_service.current_project}' project has been deleted"
+          end
+          
+        when HELP_COMMAND
+          show_help
+          
+        else
+          puts "Unknown command: #{command}.\nWrite '#{HELP_COMMAND}' for help\n\n"
+      end
+    rescue TimeTrackerException => e
+      puts "Error: #{e.message}"
     end
     
   end
@@ -228,6 +229,5 @@ msg
     
     puts message
   end
-  
   
 end
