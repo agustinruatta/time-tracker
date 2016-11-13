@@ -83,11 +83,16 @@ class TimeTrackerCommand
             seconds_worked_in_each_task = @hours_service.seconds_worked_in_each_task from, to
 
             unless seconds_worked_in_each_task.empty?
-              puts "\n\nSeconds worked in each task:\n"
+              puts "\nSeconds worked in each task:\n"
+              
+              total_seconds_in_tasks = 0
               
               seconds_worked_in_each_task.each do |task_name, task_duration|
+                total_seconds_in_tasks += task_duration
                 puts "\tTask '#{task_name}': #{hour_format(task_duration)}"
               end
+              
+              puts "\tTime without any task assigned: #{hour_format(total_seconds - total_seconds_in_tasks)}\n\n"
             end
             
           end

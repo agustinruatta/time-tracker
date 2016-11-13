@@ -53,6 +53,53 @@ option.
 
 `$ ruby time_tracker.rb clear`: clear all saved hours from current project.
 
+## Real life example
+
+```bash
+$ ruby time_tracker.rb set-project demo
+Project 'demo' set!
+
+$ ruby time_tracker.rb current-project
+Current project: demo
+
+$ ruby time_tracker.rb start
+Correct start on 'demo' project
+
+$ ruby time_tracker.rb start-task taskA
+Correct 'taskA' task start on 'demo' project
+
+$ ruby time_tracker.rb stop-task
+Correct task stop on 'demo' project
+
+$ ruby time_tracker.rb start-task taskB
+Correct 'taskB' task start on 'demo' project
+
+$ ruby time_tracker.rb stop-task
+Correct task stop on 'demo' project
+
+$ ruby time_tracker.rb start-task taskA
+Correct 'taskA' task start on 'demo' project
+
+$ ruby time_tracker.rb stop-task
+Correct task stop on 'demo' project
+
+$ ruby time_tracker.rb stop
+Correct stop on 'demo' project
+
+$ ruby time_tracker.rb worked
+From	-> 11/13/2016 00:00:00
+To	-> 11/13/2016 23:59:59
+
+Hours worked: 03:50:30
+
+Seconds worked in each task:
+	Task 'taskA': 02:23:09
+	Task 'taskB': 01:20:03
+	Time without any task assigned: 00:07:18
+
+
+```
+
 # Disclaimers
 
 TimeTracker is just a draft project. Do not aim to find a project
