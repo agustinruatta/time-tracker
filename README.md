@@ -2,8 +2,8 @@
 
 A command line time tracker, to save and track the hours worked.
 
-# Requeriments
-- Ruby > 1.9.2
+# Requirements
+- Ruby >= 1.9.2
 
 # Commands
 There are three commands
@@ -55,7 +55,7 @@ option.
 
 # Disclaimers
 
-TimeTracker is just a draft project. Do not aim to find a Project
+TimeTracker is just a draft project. Do not aim to find a project
 with good programming practices (Like dependencies injection) or 
 correct files structure.
 
