@@ -1,5 +1,6 @@
 require 'json'
 require 'date'
+require 'readline'
 
 require_relative 'services/hours_service'
 require_relative 'services/config_service'
@@ -22,6 +23,23 @@ class TimeTrackerCommand
   def initialize
     @hours_service = HoursService.new
     @config_service = ConfigService.new
+  end
+  
+  def start_shell
+    list = [
+      START_COMMAND, STOP_COMMAND, WORKED_COMMAND,
+      HELP_COMMAND, SET_PROJECT_COMMAND, CURRENT_PROJECT_COMMAND,
+      CLEAR_COMMAND, START_TASK, START_TASK
+    ]
+    
+    comp = proc { |s| list.grep(/^#{Regexp.escape(s)}/) }
+  
+    Readline.completion_append_character = " "
+    Readline.completion_proc = comp
+  
+    while line = Readline.readline('> ', true)
+      execute line.split(' ')
+    end
   end
   
   def execute(args)
