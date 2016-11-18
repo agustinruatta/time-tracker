@@ -11,11 +11,13 @@ class TimeTrackerCommand
   STOP_COMMAND = 'stop'
   WORKED_COMMAND = 'worked'
   HELP_COMMAND = 'help'
+  TASKS_COMMAND = 'tasks'
   SET_PROJECT_COMMAND = 'set-project'
   CURRENT_PROJECT_COMMAND = 'current-project'
   CLEAR_COMMAND = 'clear'
-  START_TASK = 'start-task'
-  STOP_TASK = 'stop-task'
+  START_TASK_COMMAND = 'start-task'
+  STOP_TASK_COMMAND = 'stop-task'
+  EXIT_COMMAND = 'exit'
   
   NOW_OPTION = 'now'
   TODAY_OPTION = 'today'
@@ -26,19 +28,38 @@ class TimeTrackerCommand
   end
   
   def start_shell
+    puts 'Welcome to time tracker!'
+    
     list = [
       START_COMMAND, STOP_COMMAND, WORKED_COMMAND,
       HELP_COMMAND, SET_PROJECT_COMMAND, CURRENT_PROJECT_COMMAND,
-      CLEAR_COMMAND, START_TASK, START_TASK
+      CLEAR_COMMAND, START_TASK_COMMAND, STOP_TASK_COMMAND,
+      EXIT_COMMAND, TASKS_COMMAND
     ]
     
     comp = proc { |s| list.grep(/^#{Regexp.escape(s)}/) }
   
-    Readline.completion_append_character = " "
+    Readline.completion_append_character = ' '
     Readline.completion_proc = comp
   
-    while line = Readline.readline('> ', true)
-      execute line.split(' ')
+    while true
+      current_project = @config_service.current_project
+      
+      if current_project
+        prompt = current_project + ' > '
+      else
+        prompt = '> '
+      end
+      
+      line = Readline.readline("\n" + prompt, true)
+      
+      if line.strip != EXIT_COMMAND
+        execute line.split(' ')
+      else
+        puts 'Goodbye!'
+        break
+      end
+      
     end
   end
   
@@ -65,16 +86,31 @@ class TimeTrackerCommand
           @hours_service.stop
           puts "Correct stop on '#{@config_service.current_project}' project"
   
-        when START_TASK
+        when START_TASK_COMMAND
           task = args[1]
           
           @hours_service.start_task task
           
           puts "Correct '#{task}' task start on '#{@config_service.current_project}' project"
   
-        when STOP_TASK
+        when STOP_TASK_COMMAND
           @hours_service.stop_task
           puts "Correct task stop on '#{@config_service.current_project}' project"
+          
+        when TASKS_COMMAND
+          from = from args
+          to = to args
+          
+          worked_tasks = @hours_service.worked_tasks(from, to)
+          
+          if worked_tasks.any?
+            puts "Tasks worked from #{from.strftime('%m/%d/%Y %H:%M:%S')} to #{to.strftime('%m/%d/%Y %H:%M:%S')}:"
+            worked_tasks.each do |task|
+              puts "\t*#{task}"
+            end
+          else
+            puts 'No task to show!'
+          end
           
         when WORKED_COMMAND
           (puts 'No hours saved to calculate'; return) unless @hours_service.has_data?
@@ -226,44 +262,125 @@ class TimeTrackerCommand
     
   def show_help
     message = <<-msg
-Examples:
+Commands
+========
+There are eight commands:
 
-`$ ruby time_tracker.rb start`: set the start of your work.
+- `start`: when you start working.
+- `stop`: when you stop working.
+- `start-task`: when you start a task.
+- `stop-task`: when you stop a task.
+- `tasks`: list of tasks
+- `worked`: hours worked between dates.
+- `set-project`: set project which you are working.
+- `current-project`: retrieve project which you are working.
 
-`$ ruby time_tracker.rb stop`: set the stop of your work.
+Examples
+========
+`> start`: set the start of your work.
 
-`$ ruby time_tracker.rb start-task`: set the start of your task.
+`> stop`: set the stop of your work.
 
-`$ ruby time_tracker.rb stop-task`: set the stop of your task.
+`> start-task`: set the start of your task.
 
-`$ ruby time_tracker.rb worked`: get the hours worked today.
+`> stop-task`: set the stop of your task.
 
-`$ ruby time_tracker.rb worked 2016-10-02`: get the hours worked on 2016-10-02.
+`> worked`: get the hours worked today.
 
-`$ ruby time_tracker.rb worked 2016-10-02 2016-10-03`: get worked hours between
+`> worked 2016-10-02`: get the hours worked on 2016-10-02.
+
+`> worked 2016-10-02 2016-10-03`: get worked hours between
  2016-10-02 00:00:00 and 2016-10-03 23:59:59.
  
-`$ ruby time_tracker.rb worked 2016-10-02*01:02:03 2016-10-03`: get worked hours
+`> worked 2016-10-02*01:02:03 2016-10-03`: get worked hours
 between 2016-10-02 01:02:03 and 2016-10-03 23:59:59.
 
-`$ ruby time_tracker.rb worked 2016-10-02 2016-10-03*12:25:23`:
-  Get worked hours between 2016-10-02 00:00:00 and 2016-10-03 12:25:23.
+`> worked 2016-10-02 2016-10-03*12:25:23`:
+get worked hours between 2016-10-02 00:00:00 and 2016-10-03 12:25:23.
  
-`$ ruby time_tracker.rb worked 2016-10-02*01:02:03 2016-10-03*12:25:23`:
-  Get worked hours between 2016-10-02 01:02:03 and 2016-10-03 12:25:23.
+`> worked 2016-10-02*01:02:03 2016-10-03*12:25:23`:
+get worked hours between 2016-10-02 01:02:03 and 2016-10-03 12:25:23.
 
-`$ ruby time_tracker.rb worked today 2016-10-03*12:25:23`:
-  Get worked hours between today at 00:00:00 and 2016-10-03 12:25:23.
+`> worked today 2016-10-03*12:25:23`:
+get worked hours between today at 00:00:00 and 2016-10-03 12:25:23.
 
-`$ ruby time_tracker.rb worked today*01:02:03 2016-10-03*12:25:23`:
-  Get worked hours between today at 01:02:03 and 2016-10-03 12:25:23.
+`> worked today*01:02:03 2016-10-03*12:25:23`:
+get worked hours between today at 01:02:03 and 2016-10-03 12:25:23.
 
-`$ ruby time_tracker.rb worked 2016-10-02*01:02:03 now`:
-  Get worked hours between 2016-10-02 01:02:03 and now.
-  Take care that you MUST NOT set an 'stop' action if you
-  want to use 'now' option.
+`> worked 2016-10-02*01:02:03 now`:
+get worked hours between 2016-10-02 01:02:03 and now. Take care
+that you MUST NOT set an "stop" action if you want to use "now"
+option.
 
-`$ ruby time_tracker.rb clear`: clear all saved hours from current project.
+`> clear`: clear all saved hours from current project.
+
+`> tasks`: display the tasks which you have worked today.
+
+`> tasks 2016-10-02 2016-10-03`: displays the tasks which you have
+worked between 2016-10-02 00:00:00 and 2016-10-03 23:59:59.
+
+`> tasks 2016-10-02*01:02:03 2016-10-03*12:25:23`: displays the tasks
+which you have worked between 2016-10-02 01:02:03 and
+2016-10-03 12:25:23.
+
+`> set-project demo`: set `demo` as current project.
+
+`> current-project`: displays current project.
+
+`> exit`: exits program.
+
+## Real life example
+
+$ ruby time_tracker.rb
+Welcome to time tracker!
+
+> set-project demo
+Project 'demo' set!
+
+> current-project
+Current project: demo
+
+> start
+Correct start on 'demo' project
+
+> start-task taskA
+Correct 'taskA' task start on 'demo' project
+
+> stop-task
+Correct task stop on 'demo' project
+
+> start-task taskB
+Correct 'taskB' task start on 'demo' project
+
+> stop-task
+Correct task stop on 'demo' project
+
+> start-task taskA
+Correct 'taskA' task start on 'demo' project
+
+> stop-task
+Correct task stop on 'demo' project
+
+> stop
+Correct stop on 'demo' project
+
+> tasks
+    *taskA
+    *taskB
+
+> worked
+From	-> 11/13/2016 00:00:00
+To	-> 11/13/2016 23:59:59
+
+Hours worked: 03:50:30
+
+Seconds worked in each task:
+	Task 'taskA': 02:23:09
+	Task 'taskB': 01:20:03
+	Time without any task assigned: 00:07:18
+
+> exit
+Goodbye!
 
 More info: https://github.com/agustinruatta/time-tracker
 msg

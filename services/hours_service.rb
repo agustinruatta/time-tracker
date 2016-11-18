@@ -103,9 +103,10 @@ class HoursService
     return total_seconds.to_i
   end
   
+  # Get the seconds worked in each task
   # @param [DateTime] from
   # @param [DateTime] to
-  # @return Hash
+  # @return Hash A hash with task name as key, and seconds worked as value
   def seconds_worked_in_each_task(from, to)
     labors = get_all_labors_between from, to
     labors = filter_project_actions labors
@@ -123,6 +124,26 @@ class HoursService
     end
 
     return tasks_duration_seconds
+  end
+  
+  # Return all the tasks worked between from and to
+  # @param [DateTime] from
+  # @param [DateTime] to
+  # @return string[]
+  def worked_tasks(from, to)
+    labors = get_all_labors_between from, to
+    labors = filter_project_actions labors
+    
+    tasks_name = []
+    
+    labors.each do |labor|
+      #Check if is not saved previously, and is not an empty strin
+      if !(tasks_name.include? labor.task) and labor.task != ''
+        tasks_name << labor.task
+      end
+    end
+    
+    return tasks_name
   end
   
   def has_data?
