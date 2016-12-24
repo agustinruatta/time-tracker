@@ -130,7 +130,7 @@ Seconds worked in each task:
 Goodbye!
 ```
 
-# Disclaimers
+# Project Info
 
 TimeTracker is just a draft project. Do not aim to find a project
 with good programming practices (Like dependencies injection) or 
