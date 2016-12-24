@@ -43,14 +43,6 @@ class TimeTrackerCommand
     Readline.completion_proc = comp
   
     while true
-      current_project = @config_service.current_project
-      
-      if current_project
-        prompt = current_project + ' > '
-      else
-        prompt = '> '
-      end
-      
       line = Readline.readline("\n" + prompt, true)
       
       if line.strip != EXIT_COMMAND
@@ -76,7 +68,6 @@ class TimeTrackerCommand
     end
 
     begin
-      
       case command
         when START_COMMAND
           @hours_service.start
@@ -191,6 +182,23 @@ class TimeTrackerCommand
   
   private
   
+  def prompt
+    current_project = @config_service.current_project
+  
+    prompt = ''
+    
+    if current_project
+      prompt += current_project + ' - '
+    end
+    
+    prompt += "#{current_time} > "
+    
+    return prompt
+  end
+  
+  def current_time
+    Time.now.strftime('%H:%M:%S')
+  end
   
   def hour_format(total_seconds)
     seconds = total_seconds % 60
