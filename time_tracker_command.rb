@@ -28,32 +28,36 @@ class TimeTrackerCommand
   end
   
   def start_shell
-    puts 'Welcome to time tracker!'
+    puts "Welcome to time tracker!\n\n"
     
-    list = [
-      START_COMMAND, STOP_COMMAND, WORKED_COMMAND,
-      HELP_COMMAND, SET_PROJECT_COMMAND, CURRENT_PROJECT_COMMAND,
-      CLEAR_COMMAND, START_TASK_COMMAND, STOP_TASK_COMMAND,
-      EXIT_COMMAND, TASKS_COMMAND
-    ]
+    setup
     
-    comp = proc { |s| list.grep(/^#{Regexp.escape(s)}/) }
-  
-    Readline.completion_append_character = ' '
-    Readline.completion_proc = comp
-  
-    while true
-      line = Readline.readline("\n" + prompt, true)
-      
-      if line.strip != EXIT_COMMAND
-        execute line.split(' ')
-      else
-        puts 'Goodbye!'
-        break
+    if @config_service.is_first_run?
+      puts "This is your first run! I'll show you some doc ;)"
+      show_help
+    end
+
+    begin
+      while true
+        line = Readline.readline("\n" + prompt, true)
+        
+        if line.strip != EXIT_COMMAND
+          execute line.split(' ')
+        else
+          break
+        end
       end
       
+    ###CTRL+C interrupt
+    rescue Interrupt
+      # When Interrupt is pressed, we need to display an space
+      printf "\n"
     end
+
+    puts "Goodbye!\n"
   end
+
+  private
   
   def execute(args)
     command = args[0]
@@ -180,8 +184,6 @@ class TimeTrackerCommand
     
   end
   
-  private
-  
   def prompt
     current_project = @config_service.current_project
   
@@ -198,6 +200,20 @@ class TimeTrackerCommand
   
   def current_time
     Time.now.strftime('%H:%M:%S')
+  end
+  
+  def setup
+    list = [
+      START_COMMAND, STOP_COMMAND, WORKED_COMMAND,
+      HELP_COMMAND, SET_PROJECT_COMMAND, CURRENT_PROJECT_COMMAND,
+      CLEAR_COMMAND, START_TASK_COMMAND, STOP_TASK_COMMAND,
+      EXIT_COMMAND, TASKS_COMMAND
+    ]
+  
+    comp = proc { |s| list.grep(/^#{Regexp.escape(s)}/) }
+  
+    Readline.completion_append_character = ' '
+    Readline.completion_proc = comp
   end
   
   def hour_format(total_seconds)
@@ -274,8 +290,8 @@ Commands
 ========
 There are eight commands:
 
-- `start`: when you start working.
-- `stop`: when you stop working.
+- `start`: when you start to work.
+- `stop`: when you stop to work.
 - `start-task`: when you start a task.
 - `stop-task`: when you stop a task.
 - `tasks`: list of tasks
@@ -391,9 +407,20 @@ Seconds worked in each task:
 Goodbye!
 
 More info: https://github.com/agustinruatta/time-tracker
+
+########################################################
 msg
     
-    puts message
+    puts "\nWelcome to Help! section. Press intro to go through documentation\n" +
+           "=================================================================\n\n"
+    
+    ### Show like more command
+    message_lines = message.split "\n"
+    
+    message_lines.each do |line|
+      printf line
+      gets
+    end
   end
   
 end

@@ -27,4 +27,14 @@ class ConfigService
     return @config_repository.current_config[CURRENT_PROJECT_OPTION]
   end
   
+  def is_first_run?
+    unless @config_repository.is_there_a_config
+      @config_repository.create_empty_config
+      
+      return true
+    else
+      return false
+    end
+  end
+  
 end

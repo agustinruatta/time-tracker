@@ -10,8 +10,8 @@ http://stackoverflow.com/questions/4385549/no-such-file-to-load-readline.
 # Commands
 There are eight commands:
 
-- `start`: when you start working.
-- `stop`: when you stop working.
+- `start`: when you start to work.
+- `stop`: when you stop to work.
 - `start-task`: when you start a task.
 - `stop-task`: when you stop a task.
 - `tasks`: list of tasks
