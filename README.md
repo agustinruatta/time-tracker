@@ -1,6 +1,6 @@
 # Time tracker
 
-A command line time tracker, to save and track the hours worked.
+A command line time tracker, to save and track worked hours.
 
 # Requirements
 - Ruby >= 1.9.2
